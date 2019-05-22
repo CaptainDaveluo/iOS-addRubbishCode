@@ -18,11 +18,11 @@ def getRandomStr(satrtIndex,endIndex):
 def generateNameWithWords(wordNum, needPreix = False,needSuffix = False):
     preix = ["Check", "Update", "Modify", "Add", "Del", "Set", "Send", "Call", "JJ", "HD", "LC", "CQ"]
     words = ["XiaoMi","wechat","verify","user","trade","text","template","square","share","security","search","scroll","scope",
-    "salary","register","record","recharge","reach","random","profile","product","prod","player","photo","phone","payback",
+    "salary","regist","record","recharge","reach","random","profile","product","prod","player","photo","phone","payback",
     "passport","paid","page","objc","normal","network","name","module","mine","metadata","message","member","logout","login",
     "logger","location","level","letter","investment","interface","intent","integral","instance","info","image","home","handle",
     "guide","gift","gesture","generate","form","force","flag","finance","file","figure","fields","feature","event","ecnomic",
-    "double","dialog","device","delay","deep","deal","data","cursor","control","container","console","component","client","click",
+    "twice","dialog","device","delay","deep","deal","data","cursor","control","container","console","component","client","click",
     "circle","change","calendar","business","border","bitmap","benefit","base","audio","attribute","assets","application","alipay",
     "alert","address","action","account"]
     suffix = ["Model", "Provider", "Manager", "VC", "ViewController", "View", "Delegate"]
@@ -137,7 +137,7 @@ def  generateHeaderFile(className,methods):
 
 #生成.m文件
 def generateMainFile(className,methods):
-    mainString = '#import \"' + className + '\"\n\n'
+    mainString = '#import \"' + className + '.h\"\n\n'
     mainString = mainString + '@interface ' + className + '()\n\n'
     mainString = mainString + '@end\n\n@implementation ' + className + "\n\n"
     if 'VC' in className or 'ViewController' in className:
@@ -219,7 +219,7 @@ def addNSString():
     paramNum = random.randint(0,3)
     for index in range(0,paramNum):
         methodBody['params'].append(randomParam())
-    methodBody['line'] = '- (NSDictionary *)' + methodBody['name']
+    methodBody['line'] = '- (NSString *)' + methodBody['name']
     line = methodBody['line']
     index = 0
     for methodParam in methodBody['params']:
@@ -245,7 +245,7 @@ def addNSArray():
     paramNum = random.randint(0,3)
     for index in range(0,paramNum):
         methodBody['params'].append(randomParam())
-    methodBody['line'] = '- (NSDictionary *)' + methodBody['name']
+    methodBody['line'] = '- (NSArray *)' + methodBody['name']
     line = methodBody['line']
     index = 0
     for methodParam in methodBody['params']:
@@ -278,7 +278,7 @@ def addNSData():
     paramNum = random.randint(0,3)
     for index in range(0,paramNum):
         methodBody['params'].append(randomParam())
-    methodBody['line'] = '- (NSDictionary *)' + methodBody['name']
+    methodBody['line'] = '- (NSData *)' + methodBody['name']
     line = methodBody['line']
     index = 0
     for methodParam in methodBody['params']:
@@ -326,7 +326,11 @@ def addNSDictionary():
         dictString += element
     for param in methodBody['params']:
         paramName = param['name']
-        element = '\t\t@"' + paramName + '" : '  + paramName + ',\n'
+        paramType = param['type']
+        if paramType == "BOOL" or paramType == "CGFloat":
+            element = '\t\t@"' + paramName + '" : @('  + paramName + '),\n'
+        else:
+            element = '\t\t@"' + paramName + '" : '  + paramName + ',\n'
         dictString += element
     dictString += '\t};\n\treturn ' + dictName + ';\n}'
     methodBody['str'] = line + dictString
@@ -358,9 +362,9 @@ def addUIImage():
 
     dataName = generateNameWithWords(2)
     imageName = generateNameWithWords(2) + "Image"
-    string = 'NSData *' + dataName + ' = [@"' + generateNameWithWords(5) + '"' + ' dataUsingEncoding:NSUTF8StringEncoding]' + ';\n   '
-    string += 'UIImage *' + imageName + ' = [UIImage imageWithData:' + dataName + '];\n   '
-    string += 'return '+ imageName + ';\n}'
+    string = '\tNSData *' + dataName + ' = [@"' + generateNameWithWords(5) + '"' + ' dataUsingEncoding:NSUTF8StringEncoding]' + ';\n'
+    string += '\tUIImage *' + imageName + ' = [UIImage imageWithData:' + dataName + '];\n'
+    string += '\treturn '+ imageName + ';\n}'
 
     methodBody['str'] =  line+string + '\n\n'
     methodBody['caller'] = switcher(methodBody['name'], methodBody['params'])
@@ -486,12 +490,19 @@ def generateMethodCaller(methods = dict()):
             idParamName = paramName
         else:
             if hasIdParam:
-                strResult += "\t[" +  idParamName + " setValue:" + paramName  + " forKey:" + "@\"" + paramName + "\"];\n"
+                paramValue = ""
+                if paramType == "CGFloat":
+                    paramValue = "[NSNumber numberWithFloat:" + paramName + "]"
+                elif paramType == "BOOL":
+                    paramValue = "nil"
+                else:
+                    paramValue = paramName
+                strResult += "\t[" +  idParamName + " setValue:" + paramValue  + " forKey:" + "@\"" + paramName + "\"];\n"
             else:
                 if paramType == "NSString":
-                    strResult += "\tNSLog(@\"Logger: %s\"," + paramName + ");\n"
+                    strResult += "\tNSLog(@\"Logger: %@\"," + paramName + ");\n"
                 elif paramType == "NSNumber":
-                    strResult += "\tNSLog(@\"Logger: %d\"," + paramName + ");\n"
+                    strResult += "\tNSLog(@\"Logger: %@\"," + paramName + ");\n"
                 else:
                     strResult += "\tNSLog(@\"Logger: %f\"," + paramName + ");\n"
 
